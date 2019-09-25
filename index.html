@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Document</title>
+    <title>Chatroom</title>
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -33,7 +33,7 @@
               <input name="" id="username" class="form-control" /><br /><input
                 type="submit"
                 class="btn btn-primary"
-                value="Login"
+                value="Start chatting"
               />
             </div>
           </form>
@@ -41,7 +41,7 @@
       </div>
       <div id="messageArea" class="row">
         <div class="col-md-4">
-          <div class="card bg-light">
+          <div class="card bg-light mb-3">
             <h3>Online users</h3>
             <ul class="list-group" id="users"></ul>
           </div>
@@ -72,40 +72,40 @@
     <script>
       $(function() {
         var socket = io.connect();
-        var $messageForm = $('#messageForm');
-        var $message = $('#message');
-        var $chat = $('#chat');
-        var $messageArea = $('#messageArea');
-        var $userFormArea = $('#userFormArea');
-        var $userForm = $('#userForm');
-        var $users = $('#users');
-        var $username = $('#username');
+        var $messageForm = $("#messageForm");
+        var $message = $("#message");
+        var $chat = $("#chat");
+        var $messageArea = $("#messageArea");
+        var $userFormArea = $("#userFormArea");
+        var $userForm = $("#userForm");
+        var $users = $("#users");
+        var $username = $("#username");
         $messageArea.hide();
         $messageForm.submit(e => {
           e.preventDefault();
-          socket.emit('send message', $message.val());
-          $message.val('');
+          socket.emit("send message", $message.val());
+          $message.val("");
         });
 
-        socket.on('new message', data => {
+        socket.on("new message", data => {
           $chat.append(
-            `<div class="card bg-light mb-3"><div class="card-body"><strong>${data.user}: </strong>${data.msg}</div></div>`
+            `<div class="card bg-light mb-3"><div class="card-body py-2"><strong>${data.user}: </strong>${data.msg}</div></div>`
           );
         });
 
         $userForm.submit(e => {
           e.preventDefault();
-          socket.emit('new user', $username.val(), data => {
+          socket.emit("new user", $username.val(), data => {
             if (data) {
               $userFormArea.hide();
               $messageArea.show();
             }
           });
-          $username.val('');
+          $username.val("");
         });
 
-        socket.on('get users', data => {
-          var html = '';
+        socket.on("get users", data => {
+          var html = "";
           for (let i = 0; i < data.length; i++) {
             html += `<li class='list-group-item'>${data[i]}</li>`;
           }
