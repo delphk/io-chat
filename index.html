@@ -65,18 +65,20 @@
                 class="btn btn-secondary"
                 value="Send message"
               />
+              <input id="file" type="file" />
             </div>
           </form>
         </div>
       </div>
     </div>
     <script>
-      $(function() {
+      $(function () {
         var socket = io.connect();
         var $messageForm = $("#messageForm");
         var $message = $("#message");
         var $chat = $("#chat");
         var $messageArea = $("#messageArea");
+        var $file = $("#file");
         var $userFormArea = $("#userFormArea");
         var $userForm = $("#userForm");
         var $users = $("#users");
@@ -85,29 +87,57 @@
         var timeout;
         $messageArea.hide();
 
-        $message.on("input", e => {
+        $message.on("input", (e) => {
           socket.emit("typing message", $message.val());
         });
 
-        $messageForm.submit(e => {
+        $messageForm.submit((e) => {
           e.preventDefault();
-          socket.emit("send message", $message.val());
+          if ($("#file").val()) {
+            var attachment = $("#file").prop("files")[0];
+            var messageObject = {
+              body: attachment,
+              type: "file",
+              mimeType: attachment.type,
+              fileName: attachment.name,
+            };
+          } else {
+            var messageObject = {
+              body: $message.val(),
+              type: "text",
+            };
+          }
+          socket.emit("send message", messageObject);
           $message.val("");
         });
 
-        socket.on("new message", data => {
-          $chat.append(
-            `<div class="card ${
-              data.id === socket.id ? "border-info ml-5" : "border-dark mr-5"
-            } mb-3"><div class="card-body py-2"><strong>${
-              data.user
-            }: </strong>${data.msg}</div></div>`
-          );
+        socket.on("new message", (data) => {
+          if (data.msg.type === "file") {
+            var blob = new Blob([data.msg.body], { type: data.msg.mimeType });
+            var source = URL.createObjectURL(blob);
+            $chat.append(
+              `<div class="card ${
+                data.id === socket.id ? "border-info ml-5" : "border-dark mr-5"
+              } mb-3"><div class="card-body py-2"><strong>${
+                data.user
+              }: </strong><em>sent an attachment:</em> <a href=${source} download>${
+                data.msg.fileName
+              }</a></div></div>`
+            );
+          } else {
+            $chat.append(
+              `<div class="card ${
+                data.id === socket.id ? "border-info ml-5" : "border-dark mr-5"
+              } mb-3"><div class="card-body py-2"><strong>${
+                data.user
+              }: </strong>${data.msg.body}</div></div>`
+            );
+          }
         });
 
-        $userForm.submit(e => {
+        $userForm.submit((e) => {
           e.preventDefault();
-          socket.emit("new user", $username.val(), data => {
+          socket.emit("new user", $username.val(), (data) => {
             if (data) {
               $userFormArea.hide();
               $messageArea.show();
@@ -116,7 +146,7 @@
           $username.val("");
         });
 
-        socket.on("typing", data => {
+        socket.on("typing", (data) => {
           if (data.id !== socket.id) {
             clearTimeout(timeout);
             $activeUser.show();
@@ -127,7 +157,7 @@
           }
         });
 
-        socket.on("get users", data => {
+        socket.on("get users", (data) => {
           var html = "";
           for (let i = 0; i < data.length; i++) {
             html += `<li class='list-group-item'>${data[i]}</li>`;
