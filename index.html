@@ -85,6 +85,21 @@
         var $username = $("#username");
         var $activeUser = $("#activeUser");
         var timeout;
+        var entityMap = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+          "/": "&#x2F;",
+          "`": "&#x60;",
+          "=": "&#x3D;",
+        };
+        function escapeHtml(string) {
+          return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+            return entityMap[s];
+          });
+        }
         $messageArea.hide();
 
         $message.on("input", (e) => {
@@ -130,7 +145,7 @@
                 data.id === socket.id ? "border-info ml-5" : "border-dark mr-5"
               } mb-3"><div class="card-body py-2"><strong>${
                 data.user
-              }: </strong>${data.msg.body}</div></div>`
+              }: </strong>${escapeHtml(data.msg.body)}</div></div>`
             );
           }
         });
